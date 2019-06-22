@@ -1,12 +1,12 @@
 namespace MKLUODDD.Model.Domain {
     
-    public class LegacyUserInfo : BaseUser, IUser {
+    public class LegacyUser : BaseUser, IUser {
 
         public Name Name { get; }
         public Username Username { get; }
         public Password Password { get; }
 
-        public LegacyUserInfo(
+        public LegacyUser(
             Name name,
             Username username,
             Password password,

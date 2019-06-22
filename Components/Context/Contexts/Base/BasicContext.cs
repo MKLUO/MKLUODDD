@@ -1,28 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace MKLUODDD.Context
 {
     using DAL;
     using Mapper;
 
-    public class BasicContext<T, TD> : 
-        BaseContext<T, TD>, 
+    public class BasicContext<T, TORM> : 
+        BaseContext<T, TORM>, 
         IContext<T>,
-        IAggregationContext<T, TD>,
+        IAggregationContext<T, TORM>,
         IPersistContext<T>,
-        IHookerContext<TD>
+        IHookerContext<TORM>
         where T : class
-        where TD : class, new()
+        where TORM : class, new()
     {
 
-        protected new IWriteRepository<TD> Repo { get; }
-        protected new IMapper<T, TD> Mapper { get; }
+        protected new IWriteRepository<TORM> Repo { get; }
+        protected new IMapper<T, TORM> Mapper { get; }
         protected HashSet<T> PushedEnts { get; } = new HashSet<T> { };
 
         public BasicContext(
-            IWriteRepository<TD> repo,
-            IMapper<T, TD> mapper,
+            IWriteRepository<TORM> repo,
+            IMapper<T, TORM> mapper,
             IDomainMapper domainMapper) : base(repo, mapper, domainMapper) {
 
             Repo = repo;
@@ -30,31 +32,39 @@ namespace MKLUODDD.Context
 
             Mapper = mapper;
         }
+
+        public override IList<T> Query(
+            Expression<Func<T, bool>> ? criteriaOnT = null, 
+            UpdLockType updLock = UpdLockType.None) {
+                
+            ClearPushedCache();
+            Commit();
+            ClearPushedCache();
+
+            return base.Query(criteriaOnT, updLock);
+        }
         
         #region IAggregationContext<T, TD>
 
-        public override TD? Push(in T entity) {
-            if (!Store.ContainsKey(entity))
-                return null;
+        public override TORM? Push(in T entity) {
+
+            if (!Store.ContainsKey(entity)) {
+                if (Add(entity)) return Store[entity];
+                else return null;
+            }
 
             if (PushedEnts.Contains(entity))
                 return Store[entity];
-
-            var obj = Mapper.Patch(Store[entity], entity);
             PushedEnts.Add(entity);
 
+            var obj = Mapper.Patch(Store[entity], entity);
             PushMidware(entity, obj);
 
             Repo.Update(Store[entity]);
 
             return obj;
         }
-
-        public virtual TD PushTransient(in T entity) {
-            var obj = Mapper.Materialize(entity);
-            PushMidware(entity, obj);
-            return obj;
-        }
+        
         #endregion
 
         #region IWriteContext<T>
@@ -66,6 +76,7 @@ namespace MKLUODDD.Context
 
         public bool Add(in ICollection<T> newEntities, bool ignoreFailedEntities = false) {
 
+            #region check
             var actualNewEntities = newEntities.Where(
                 ent => !Store.ContainsKey(ent)
             );
@@ -77,11 +88,17 @@ namespace MKLUODDD.Context
             
             if (!ignoreFailedEntities && invalidEntries.Count > 0)
                 return false;
+            #endregion 
 
             foreach (var newEntity in actualNewEntities.Except(invalidEntries)) {
+                if (PushedEnts.Contains(newEntity))
+                    return true;
+                PushedEnts.Add(newEntity);
 
-                var obj = PushTransient(newEntity);
+                var obj = Mapper.Materialize(newEntity);
                 Attach(newEntity, obj);
+                PushMidware(newEntity, obj);
+
                 Repo.Add(obj);
             }
 

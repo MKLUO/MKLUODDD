@@ -46,7 +46,7 @@ namespace MKLUODDD.Core {
         IContext<User> UserContext { get; }
         IPersistContext<User> UserPersist { get; }
         IReadContext<UserInfo> UserView { get; }
-        IReadContext<LegacyUserInfo> LegacyUserView { get; }
+        IReadContext<LegacyUser> LegacyUserView { get; }
 
         IContextHandle Handle { get; }
 
@@ -54,7 +54,7 @@ namespace MKLUODDD.Core {
             IContext<User> userContext,
             IPersistContext<User> userPersist,
             IReadContext<UserInfo> userInfoView,
-            IReadContext<LegacyUserInfo> legacyUserView,
+            IReadContext<LegacyUser> legacyUserView,
             IContextHandle handle
         ) {
             this.UserContext = userContext;

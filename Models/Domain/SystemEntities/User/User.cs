@@ -8,7 +8,7 @@ namespace MKLUODDD.Model.Domain {
         public PasswordHash PasswordHash { get; private set; }
         public PasswordSalt PasswordSalt { get; private set; }
 
-        public LegacyUserInfo? Predecessor { get; private set; }
+        public LegacyUser? Predecessor { get; private set; }
 
         public User(
             Name name,
@@ -17,7 +17,7 @@ namespace MKLUODDD.Model.Domain {
             PasswordSalt passwordSalt,
             UserMiscData? miscData = null,
 
-            LegacyUserInfo? predecessor = null
+            LegacyUser? predecessor = null
         ) {
             Name = name;
             Username = username;
@@ -28,7 +28,7 @@ namespace MKLUODDD.Model.Domain {
             Predecessor = predecessor;
         }
 
-        public void SetPredecessor(in LegacyUserInfo preUser) {
+        public void SetPredecessor(LegacyUser? preUser) {
             Predecessor = preUser;
             // return this;
         }
@@ -64,7 +64,7 @@ namespace MKLUODDD.Model.Domain {
             return true;
         }
 
-        public static User MigrateFromLegacy(LegacyUserInfo legacyUser) {
+        public static User MigrateFromLegacy(LegacyUser legacyUser) {
             var salt = PasswordSalt.GernerateSalt();
 
             return new User(

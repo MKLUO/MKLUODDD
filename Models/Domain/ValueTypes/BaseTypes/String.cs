@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace MKLUODDD.Model.Domain {
 
     public class String : TypeSafeValueType<String>, IValue<string> {
@@ -9,6 +7,10 @@ namespace MKLUODDD.Model.Domain {
         public String(string str) {
             this.Value = str;
         }
+
+        public static implicit operator String(string str) =>
+            new String(str);
+        
         protected override bool ValueEquals(object obj) {
             return Value == (obj as String)?.Value;
         }

@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace MKLUODDD.Context {
+namespace MKLUODDD.Context
+{
 
     using Model.Persist;
 
@@ -22,6 +23,8 @@ namespace MKLUODDD.Context {
             Expression<Func<T, bool>>? criteriaOnT = null, 
             UpdLockType updLock = UpdLockType.None,
             int batchSize = 0);
+
+        void Draw(in T entity);
 
         int Count(in Expression<Func<T, bool>>? criteriaOnT = null);
     }
@@ -93,12 +96,14 @@ namespace MKLUODDD.Context {
         /// Instantiate an entity from given ORM object.
         /// </summary>
         /// <param name="obj">ORM object.</param>
-        /// <param name="halt">Stop fetching at this obj and don't go further.</param>
+        /// <param name="halt">Don't fetch its collections.</param>
         /// <returns>Instantiated entity.</returns>
         T Pull(in TD obj, bool halt = false);
 
         /// <summary>
         /// Get and patch corresponding ORM object of given entity.
+        /// If entity is not present, add it to the context.
+        /// If add failed, returns null.
         /// </summary>
         /// <param name="entity">Entity.</param>
         /// <returns>Patched ORM object.</returns>

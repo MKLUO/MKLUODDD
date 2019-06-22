@@ -1,13 +1,28 @@
-using System;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Microsoft.Extensions.DependencyInjection {
 
     using MKLUODDD.Context;
     using MKLUODDD.DAL;
     using MKLUODDD.Mapper;
 
-    public static partial class ContextBuilder {
+    public static partial class ContextBuilderExtensions {
+
+        public static IServiceCollection AddDefaultUtilContexts(this IServiceCollection services) {
+
+            // Aggregation proxy
+            services
+                .AddScoped(typeof(IAggregationContextProxy<,>), typeof(AggregationContextProxy<,>));
+
+            // Utility Mapper
+            services
+                .AddScoped<IDomainMapper, DomainMapper>();
+
+            // Context Handle
+            services
+                .AddScoped<ContextHandle>()
+                .AddSameScoped<IContextHandle, ContextHandle>()
+                .AddSameScoped<IRegistableContextHandle, ContextHandle>();
+            return services;
+        }
 
         // Same instance used among multiple interfaces
 
