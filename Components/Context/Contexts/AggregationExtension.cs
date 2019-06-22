@@ -23,14 +23,13 @@ namespace MKLUODDD.Model.ORM
         public static void UnleashSomeTo<TORM, TD, TDORM>(
             this TORM obj, 
             Action<IEnumerable<TD>> setter, 
-            IAggregationContext<TD, TDORM> context,
-            bool halt = false)  
+            IAggregationContext<TD, TDORM> context)  
             where TORM : IOwnsSome<TDORM> 
             where TDORM : class, new() {
 
             setter(
                 obj.Get(new TDORM())
-                .Select(t => context.Pull(t, halt)));
+                .Select(t => context.Pull(t, halt: true)));
         }
 
         public static void GrabFrom<TORM, TD, TDORM>(

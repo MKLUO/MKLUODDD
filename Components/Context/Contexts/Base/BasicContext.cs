@@ -64,7 +64,7 @@ namespace MKLUODDD.Context
 
             return obj;
         }
-        
+
         #endregion
 
         #region IWriteContext<T>

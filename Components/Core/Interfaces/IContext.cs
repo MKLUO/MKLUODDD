@@ -26,7 +26,8 @@ namespace MKLUODDD.Context
 
         void Draw(in T entity);
 
-        int Count(in Expression<Func<T, bool>>? criteriaOnT = null);
+        int Count(in Expression<Func<T, bool>>? criteriaOnT = null, 
+            UpdLockType updLock = UpdLockType.None);
     }
 
     /// <summary>

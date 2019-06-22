@@ -116,9 +116,9 @@ namespace MKLUODDD.Context
             }
         }
 
-        public int Count(in Expression<Func<T, bool>>? criteriaOnT = null) => 
-            Repo.QueryWithCriteria((criteriaOnT != null) ? 
-                TrasformExp(criteriaOnT) : null).Count();
+        public int Count(in Expression<Func<T, bool>>? criteriaOnT = null, 
+            UpdLockType updLock = UpdLockType.None) => 
+            GetQuery(criteriaOnT, updLock).Count();
 
         public virtual void Reset() => ClearStore();
         
