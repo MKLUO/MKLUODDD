@@ -3,7 +3,7 @@ using System.Text;
 
 namespace MKLUODDD.Model.Domain {
 
-    public class ByteArray : ValueType<ByteArray> {
+    public class ByteArray : TypeSafeValueType<ByteArray> {
 
         byte[] DataInstance { get; }
         public byte[] Data => DataInstance.Clone() as byte[] ??
@@ -17,8 +17,7 @@ namespace MKLUODDD.Model.Domain {
         public static implicit operator ByteArray(byte[] data) =>
             new ByteArray(data);
 
-        public override bool Equals(object obj) {
-            if (this.GetType() != obj.GetType()) return false;
+        protected override bool ValueEquals(object obj) {
             return Data.SequenceEqual((obj as ByteArray)?.Data);
         }
 
