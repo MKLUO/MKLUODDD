@@ -29,8 +29,8 @@ namespace MKLUODDD.Model.ORM
         Action<T?> Setter { get; }
 
         public Navigator(Func<T> getter, Action<T?> setter) {
-            Getter = getter;
-            Setter = setter;
+            Getter = getter;;
+            Setter = setter;;
         }
 
         public T? Get() => Getter();
