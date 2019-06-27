@@ -136,6 +136,11 @@ namespace MKLUODDD.Context
             return entity;
         }
 
+        public bool IsTransient(in T entity) => !Store.ContainsKey(entity);
+
         public virtual TD? Push(in T entity) { return null; }
+        public abstract TD PushTransient(in T entity);
+        public abstract void AttachTransient(in T entity, in TD obj);
+
     }
 }

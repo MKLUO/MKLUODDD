@@ -74,9 +74,27 @@ namespace MKLUODDD.Context
             var obj = Mapper.Patch(Store[entity], entity);
             PushMidware(entity, obj);
 
-            Repo.Update(Store[entity]);
+            Repo.Update(Store[entity]);            
+
+            PushPostware(entity, obj);
 
             return obj;
+        }
+
+        public override TORM PushTransient(in T entity) {
+
+            PushedEnts.Add(entity);
+
+            var obj = Mapper.Materialize(entity);
+            PushMidware(entity, obj);
+
+            return obj;
+        }
+        
+        public override void AttachTransient(in T entity, in TORM obj) {
+            Attach(entity, obj);
+            Repo.Add(obj);
+            PushPostware(entity, obj);
         }
 
         #endregion
@@ -110,10 +128,10 @@ namespace MKLUODDD.Context
                 PushedEnts.Add(newEntity);
 
                 var obj = Mapper.Materialize(newEntity);
-                Attach(newEntity, obj);
                 PushMidware(newEntity, obj);
-
+                Attach(newEntity, obj);
                 Repo.Add(obj);
+                PushPostware(newEntity, obj);
             }
 
             return true;

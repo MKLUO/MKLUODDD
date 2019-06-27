@@ -28,6 +28,24 @@ namespace MKLUODDD.Context {
             return Context.Push(entity);
         }
 
+        public TD PushTransient(in T entity) {
+            if (Context == null) Init();
+            if (Context == null) throw new AggregationContextProxtInitializationException();
+            return Context.PushTransient(entity);
+        }
+
+        public bool IsTransient(in T entity) {
+            if (Context == null) Init();
+            if (Context == null) throw new AggregationContextProxtInitializationException();
+            return Context.IsTransient(entity);
+        }
+
+        public void AttachTransient(in T entity, in TD obj) {
+            if (Context == null) Init();
+            if (Context == null) throw new AggregationContextProxtInitializationException();
+            Context.AttachTransient(entity, obj);
+        }
+
         [Serializable]
         public class AggregationContextProxtInitializationException : System.Exception
         {

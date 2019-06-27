@@ -24,32 +24,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             return services;
         }
 
-        // Same instance used among multiple interfaces
-
-        // static class ContextFactory<T> where T : class {
-        //     static T? Instance { get; set; }  = null;
-
-        //     public static T New(IServiceProvider provider) {
-        //         Instance = provider.GetService<T>();
-        //         return Instance;
-        //     }
-
-        //     public static T Get(IServiceProvider provider) {
-        //         if (Instance == null) Instance = provider.GetService<T>();
-        //         return Instance;
-        //     }
-        // }
-
-        // public static IServiceCollection AddNew<IService, TService> (this IServiceCollection services) 
-        //     where IService : class 
-        //     where TService : class, IService {
-                
-        //         return services.AddTransient<IService, TService>(
-        //             // x => x.GetRequiredService<TService>()
-        //             x => ContextFactory<TService>.New(x)
-        //         );
-        //     }
-
         public static IServiceCollection AddSame<IService, TService> (this IServiceCollection services) 
             where IService : class 
             where TService : class, IService {
@@ -64,112 +38,131 @@ namespace Microsoft.Extensions.DependencyInjection {
         // Repo => Context builder
         #region ContextBuilder
 
-        public interface IServiceContextBuilder<TD> 
-            where TD : class, new() {
+        public interface IServiceContextBuilder<TORM> 
+            where TORM : class, new() {
 
-            IServiceCollection? Service { get; }
+            IServiceCollection Service { get; }
 
-            IServiceContextBuilder<TD> WithContext<T, TMapper, TContext>()
+            IServiceContextBuilder<TORM> WithContext<T, TMapper, TContext>()
                 where T : class
-                where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TD>, IHookerContext<TD>
-                where TMapper : class, IMapper<T, TD>;
+                where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>, IHookerContext<TORM>
+                where TMapper : class, IMapper<T, TORM>;
 
-            IServiceContextBuilder<TD> WithReadonlyContext<T, TMapper, TContext>()
+            IServiceContextBuilder<TORM> WithLookUpContext<T, TChild, TMapper, TContext>()
                 where T : class
-                where TContext : class, IReadContext<T>, IPersistContext<T>, IAggregationContext<T, TD>
-                where TMapper : class, IReadonlyMapper<T, TD>;
+                where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>, IHookerContext<TORM>,ILookUpContext<TChild, T>
+                where TMapper : class, IMapper<T, TORM>;
 
-            IServiceContextBuilder<TD> WithView<T, TMapper, TContext>()
+            IServiceContextBuilder<TORM> WithReadonlyContext<T, TMapper, TContext>()
+                where T : class
+                where TContext : class, IReadContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>
+                where TMapper : class, IReadonlyMapper<T, TORM>;
+
+            IServiceContextBuilder<TORM> WithView<T, TMapper, TContext>()
                 where T : class 
                 where TContext : class, IReadContext<T>
-                where TMapper : class, IViewMapper<T, TD>;
+                where TMapper : class, IViewMapper<T, TORM>;
+
+            IServiceCollection End();
         }
 
-        public class ServiceContextBuilder<TD> : IServiceContextBuilder<TD> 
-            where TD : class, new() {
+        public class ServiceContextBuilder<TORM> : IServiceContextBuilder<TORM> 
+            where TORM : class, new() {
 
-            public IServiceCollection? Service { get; set; } = null;
+            public IServiceCollection Service { get; set; }
 
-            public IServiceContextBuilder<TD> WithContext<T, TMapper, TContext>()
+            public ServiceContextBuilder(IServiceCollection service) =>
+                Service = service;
+
+            public IServiceContextBuilder<TORM> WithContext<T, TMapper, TContext>()
                 where T : class
-                where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TD>, IHookerContext<TD>
-                where TMapper : class, IMapper<T, TD> =>                 
-                new ServiceContextBuilder<TD>{ Service = Service?.AddContext<T, TD, TContext, TMapper>() };
+                where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>, IHookerContext<TORM>
+                where TMapper : class, IMapper<T, TORM> =>                 
+                new ServiceContextBuilder<TORM>(service: Service.AddContext<T, TORM, TContext, TMapper>());
 
-            public IServiceContextBuilder<TD> WithReadonlyContext<T, TMapper, TContext>()
+            public IServiceContextBuilder<TORM> WithLookUpContext<T, TChild, TMapper, TContext>()
                 where T : class
-                where TContext : class, IReadContext<T>, IPersistContext<T>, IAggregationContext<T, TD>
-                where TMapper : class, IReadonlyMapper<T, TD> =>                 
-                new ServiceContextBuilder<TD>{ Service = Service?.AddReadonlyContext<T, TD, TContext, TMapper>() };
+                where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>, IHookerContext<TORM>,ILookUpContext<TChild, T>
+                where TMapper : class, IMapper<T, TORM> =>                 
+                new ServiceContextBuilder<TORM>(service: Service.AddLookUpContext<T, TORM, TChild, TContext, TMapper>());
 
-            public IServiceContextBuilder<TD> WithView<T, TMapper, TContext>()
+            public IServiceContextBuilder<TORM> WithReadonlyContext<T, TMapper, TContext>()
+                where T : class
+                where TContext : class, IReadContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>
+                where TMapper : class, IReadonlyMapper<T, TORM> =>                 
+                new ServiceContextBuilder<TORM>(service: Service.AddReadonlyContext<T, TORM, TContext, TMapper>());
+
+            public IServiceContextBuilder<TORM> WithView<T, TMapper, TContext>()
                 where T : class
                 where TContext : class, IReadContext<T>
-                where TMapper : class, IViewMapper<T, TD> =>                 
-                new ServiceContextBuilder<TD>{ Service = Service?.AddView<T, TD, TContext, TMapper>() };
+                where TMapper : class, IViewMapper<T, TORM> =>                 
+                new ServiceContextBuilder<TORM>(service: Service.AddView<T, TORM, TContext, TMapper>());
+
+            public IServiceCollection End() => Service;
         }
 
         #endregion
 
-        public static IServiceContextBuilder<TD> AddRepository<TD>(
+        public static IServiceContextBuilder<TORM> AddRepository<TORM>(
             this IServiceCollection services)
-        where TD : class, new() => new ServiceContextBuilder<TD> { Service = services.AddScoped<Repository<TD>>() };
+        where TORM : class, new() => new ServiceContextBuilder<TORM>(service: services.AddScoped<Repository<TORM>>());
 
-        public static IServiceCollection AddContext<T, TD, TContext, TMapper>(
+        static IServiceCollection AddBaseContext<T, TORM, TContext>(
             this IServiceCollection services)
             where T : class
-            where TD : class, new()
-            where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TD>, IHookerContext<TD>
-            where TMapper : class, IMapper<T, TD> =>
+            where TORM : class, new()
+            where TContext : class, IPersistContext<T>, IAggregationContext<T, TORM> =>
                 services
                     .AddScoped<TContext>()
+                    .AddSame<IPersistContext<T>, TContext>()
+                    .AddSame<IAggregationContext<T, TORM>, TContext>();
+
+        public static IServiceCollection AddContext<T, TORM, TContext, TMapper>(
+            this IServiceCollection services)
+            where T : class
+            where TORM : class, new()
+            where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>, IHookerContext<TORM>
+            where TMapper : class, IMapper<T, TORM> =>
+                services
+                    .AddBaseContext<T, TORM, TContext>()
                     .AddSame<IContext<T>, TContext>()
-                    .AddSame<IPersistContext<T>, TContext>()
-                    .AddSame<IAggregationContext<T, TD>, TContext>()
-                    .AddSame<IHookerContext<TD>, TContext>()
-
-                    .AddScoped<IMapper<T, TD>, TMapper>()
-
-                    .AddSame<IWriteRepository<TD>, Repository<TD>>();
-                    // .AddTransient<TContext>()
-                    // .AddNew<IContext<T>, TContext>()
-                    // .AddSame<IPersistContext<T>, TContext>()
-                    // .AddSame<IAggregationContext<T, TD>, TContext>()
-                    // .AddSame<IHookerContext<TD>, TContext>()
-
-                    // .AddScoped<IMapper<T, TD>, TMapper>()
-
-                    // .AddSame<IWriteRepository<TD>, Repository<TD>>();
-
-        public static IServiceCollection AddReadonlyContext<T, TD, TContext, TMapper>(
+                    .AddSame<IHookerContext<TORM>, TContext>()
+                    .AddScoped<IMapper<T, TORM>, TMapper>()
+                    .AddSame<IWriteRepository<TORM>, Repository<TORM>>();
+        
+        public static IServiceCollection AddLookUpContext<T, TORM, TChild, TContext, TMapper>(
             this IServiceCollection services)
             where T : class
-            where TD : class, new()
-            where TContext : class, IReadContext<T>, IPersistContext<T>, IAggregationContext<T, TD>
-            where TMapper : class, IReadonlyMapper<T, TD> =>
+            where TORM : class, new()
+            where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>, IHookerContext<TORM>,ILookUpContext<TChild, T>
+            where TMapper : class, IMapper<T, TORM> =>
                 services
-                    .AddScoped<TContext>()
-                    .AddSame<IReadContext<T>, TContext>()
-                    .AddSame<IPersistContext<T>, TContext>()
-                    .AddSame<IAggregationContext<T, TD>, TContext>()
+                    .AddContext<T, TORM, TContext, TMapper>()
+                    .AddSame<ILookUpContext<TChild, T>, TContext>();
 
-                    .AddScoped<IReadonlyMapper<T, TD>, TMapper>()
-
-                    .AddSame<IBaseRepository<TD>, Repository<TD>>();
-
-        public static IServiceCollection AddView<T, TD, TContext, TMapper>(
+        public static IServiceCollection AddReadonlyContext<T, TORM, TContext, TMapper>(
             this IServiceCollection services)
             where T : class
-            where TD : class, new()
+            where TORM : class, new()
+            where TContext : class, IReadContext<T>, IPersistContext<T>, IAggregationContext<T, TORM>
+            where TMapper : class, IReadonlyMapper<T, TORM> =>
+                services
+                    .AddBaseContext<T, TORM, TContext>()
+                    .AddSame<IReadContext<T>, TContext>()
+                    .AddScoped<IReadonlyMapper<T, TORM>, TMapper>()
+                    .AddSame<IBaseRepository<TORM>, Repository<TORM>>();
+
+        public static IServiceCollection AddView<T, TORM, TContext, TMapper>(
+            this IServiceCollection services)
+            where T : class
+            where TORM : class, new()
             where TContext : class, IReadContext<T>
-            where TMapper : class, IViewMapper<T, TD> =>
+            where TMapper : class, IViewMapper<T, TORM> =>
                 services
                     .AddScoped<TContext>()
                     .AddSame<IReadContext<T>, TContext>()
-
-                    .AddScoped<IViewMapper<T, TD>, TMapper>()
-
-                    .AddSame<IReadRepository<TD>, Repository<TD>>();
+                    .AddScoped<IViewMapper<T, TORM>, TMapper>()
+                    .AddSame<IReadRepository<TORM>, Repository<TORM>>();
             
 
     }

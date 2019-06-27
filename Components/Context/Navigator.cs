@@ -32,6 +32,8 @@ namespace MKLUODDD.Model.ORM
             Getter = getter;;
             Setter = setter;;
         }
+        public static implicit operator Navigator<T>((Func<T> getter, Action<T?> setter) prop) =>
+            new Navigator<T>(prop.getter, prop.setter);
 
         public T? Get() => Getter();
         public void Set(T? t) => Setter(t);

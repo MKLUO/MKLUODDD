@@ -22,5 +22,15 @@ namespace MKLUODDD.Context {
 
             Mapper.ComposeInplace(StoreLookUp[obj], obj);
         }
+
+        public override TD PushTransient(in T entity)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override void AttachTransient(in T entity, in TD obj)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

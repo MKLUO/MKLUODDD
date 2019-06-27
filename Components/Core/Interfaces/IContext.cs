@@ -62,6 +62,11 @@ namespace MKLUODDD.Context
     public interface IContext<T> : IReadContext<T>, IWriteContext<T> 
         where T : class {}
 
+    
+    public interface ILookUpContext<T, TLookUp> : IContext<TLookUp> where TLookUp : class {
+        IEnumerable<T> WhoLookUp(TLookUp group);
+    }
+
     /// <summary>
     /// Context utilities which enables transferring persistance info between different sessions.
     /// Useful when entities have to leave Domain layer.
@@ -94,6 +99,8 @@ namespace MKLUODDD.Context
     /// <typeparam name="T">Entity type.</typeparam>
     /// <typeparam name="TD">ORM type.</typeparam>
     public interface IAggregationContext<T, TD> where TD : class {
+
+        bool IsTransient(in T entity);
         
         /// <summary>
         /// Instantiate an entity from given ORM object.
@@ -112,12 +119,14 @@ namespace MKLUODDD.Context
         /// <returns>Patched ORM object.</returns>
         TD? Push(in T entity);
         
-        // /// <summary>
-        /// // /// Create transient ORM object of given entity.
-        // /// </summary>
-        // /// <param name="entity">Entity.</param>
-        // /// <returns>Transient ORM object.</returns>
-        // TD PushTransient(in T entity);
+        /// <summary>
+        /// Create transient ORM object of given entity.
+        /// </summary>
+        /// <param name="entity">Entity.</param>
+        /// <returns>Transient ORM object.</returns>
+        TD PushTransient(in T entity);
+
+        void AttachTransient(in T entity, in TD obj);
     }
 
     public interface IResettableContext {        

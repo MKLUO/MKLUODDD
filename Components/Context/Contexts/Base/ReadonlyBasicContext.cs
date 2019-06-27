@@ -28,5 +28,15 @@ namespace MKLUODDD.Context
 
             return obj;
         }
+
+        
+        public override TD PushTransient(in T entity) {
+
+            throw new System.Exception();
+        }
+                public override void AttachTransient(in T entity, in TD obj)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

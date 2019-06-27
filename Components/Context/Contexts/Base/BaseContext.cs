@@ -53,6 +53,7 @@ namespace MKLUODDD.Context
         }
 
         protected virtual void PushMidware(in T entity, in TD obj) { }
-        public override abstract TD? Push(in T entity);
+        protected virtual void PushPostware(in T entity, in TD obj) { }
+        public override abstract TD? Push(in T entity);        
     }
 }
