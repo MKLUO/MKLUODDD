@@ -10,6 +10,8 @@ namespace MKLUODDD.Model.Domain {
         public Time(DateTime time) : this((time - Origin).TotalSeconds) { }
         public static implicit operator Time(DateTime time) => new Time(time);
 
+        public static DateTime Now => DateTime.Now;
+
         public DateTime GetDateTime() => Origin.AddSeconds(Value);
     }
 }

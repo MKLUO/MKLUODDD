@@ -9,55 +9,66 @@ namespace MKLUODDD.Model.ORM
     public static class AggregationExtension {
         public static void GrabSomeFrom<TORM, TD, TDORM>(
             this TORM obj, 
-            ISet<TD>? maybeChildObjs, 
+            IEnumerable<TD>? maybeChildEnts, 
             IAggregationContext<TD, TDORM> context)  
-            where TORM : IOwnsSome<TDORM> 
-            where TDORM : class {
+            where TORM : class, INavSome<TDORM>, new()
+            where TDORM : class, INav<TORM>, new()  {
 
-            if (maybeChildObjs is ISet<TD> childObjs)
-                obj.Set(childObjs
-                .Select(t => context.Push(t))
-                .Where(t => t is TDORM).Cast<TDORM>());
+            if (maybeChildEnts is IEnumerable<TD> childEnts) {
+
+                var childObjs = childEnts
+                    .Select(t => context.Push(t))
+                    .Where(t => t is TDORM).Cast<TDORM>();
+
+                obj.NavSome(new TDORM()).Set(childObjs);
+                foreach (var childObj in childObjs)
+                    childObj.Nav(new TORM()).Set(obj);
+            }
         }
+
 
         public static void UnleashSomeTo<TORM, TD, TDORM>(
             this TORM obj, 
             Action<IEnumerable<TD>> setter, 
             IAggregationContext<TD, TDORM> context)  
-            where TORM : IOwnsSome<TDORM> 
+            where TORM : INavSome<TDORM> 
             where TDORM : class, new() {
 
             setter(
-                obj.Get(new TDORM())
-                .Select(t => context.Pull(t, halt: true)));
+                obj.NavSome(new TDORM()).Get()
+                .Select(t => context.Pull(t, ignoreCollection: true)));
         }
 
         public static void GrabFrom<TORM, TD, TDORM>(
             this TORM obj, 
-            TD? maybeChildObj, 
+            TD? maybeParentEnt, 
             IAggregationContext<TD, TDORM> context)  
             where TD : class
-            where TORM : IOwnsOne<TDORM> 
-            where TDORM : class {
+            where TORM : class, INav<TDORM>, new() 
+            where TDORM : class, INavSome<TORM>, new() {
 
-            if (maybeChildObj is TD childObj)
-                obj.Set(context.Push(childObj));
-            else 
-                obj.Set(null);
+            if (maybeParentEnt is TD parentEnt) {
+
+                var parentObj = context.Push(parentEnt);
+
+                obj.Nav(new TDORM()).Get()?.NavSome(new TORM()).Remove(obj);
+                obj.Nav(new TDORM()).Set(parentObj);
+                parentObj?.NavSome(new TORM())?.Add(obj);
+
+            } else 
+                obj.Nav(new TDORM()).Set(null);
         }
 
         public static void UnleashTo<TORM, TD, TDORM>(
             this TORM obj, 
-            Action<TD?> setter, 
+            Action<TD> setter, 
             IAggregationContext<TD, TDORM> context)  
             where TD : class
-            where TORM : IOwnsOne<TDORM> 
+            where TORM : INav<TDORM> 
             where TDORM : class, new() {
 
-            if (obj.Get(new TDORM()) is TDORM tdorm)
-                setter(context.Pull(tdorm, halt: true));
-            else 
-                setter(null);
+            if (obj.Nav(new TDORM()).Get() is TDORM tdorm)
+                setter(context.Pull(tdorm, ignoreCollection: true));
         }
     }
 

@@ -17,14 +17,16 @@ namespace MKLUODDD.Context
         /// <returns>Query result.</returns>        
         IList<T> Query(
             Expression<Func<T, bool>>? criteriaOnT = null, 
-            UpdLockType updLock = UpdLockType.None);
+            UpdLockType updLock = UpdLockType.None, 
+            bool ignoreCollection = false);
             
         IEnumerable<T> Enumerate(
             Expression<Func<T, bool>>? criteriaOnT = null, 
-            UpdLockType updLock = UpdLockType.None,
+            UpdLockType updLock = UpdLockType.None, 
+            bool ignoreCollection = false,
             int batchSize = 0);
 
-        void Draw(in T entity);
+        void DrawCollection(in T entity);
 
         int Count(in Expression<Func<T, bool>>? criteriaOnT = null, 
             UpdLockType updLock = UpdLockType.None);
@@ -92,14 +94,14 @@ namespace MKLUODDD.Context
     /// <typeparam name="T">Entity type.</typeparam>
     /// <typeparam name="TD">ORM type.</typeparam>
     public interface IAggregationContext<T, TD> where TD : class {
-
+        
         /// <summary>
         /// Instantiate an entity from given ORM object.
         /// </summary>
         /// <param name="obj">ORM object.</param>
-        /// <param name="halt">Don't fetch its collections.</param>
+        /// <param name="ignoreCollection">Don't fetch its collections.</param>
         /// <returns>Instantiated entity.</returns>
-        T Pull(in TD obj, bool halt = false);
+        T Pull(in TD obj, bool ignoreCollection = false);
 
         /// <summary>
         /// Get and patch corresponding ORM object of given entity.

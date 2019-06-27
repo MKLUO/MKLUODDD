@@ -1,5 +1,5 @@
+using System;
 namespace Microsoft.Extensions.DependencyInjection {
-
     using MKLUODDD.Context;
     using MKLUODDD.DAL;
     using MKLUODDD.Mapper;
@@ -19,16 +19,46 @@ namespace Microsoft.Extensions.DependencyInjection {
             // Context Handle
             services
                 .AddScoped<ContextHandle>()
-                .AddSameScoped<IContextHandle, ContextHandle>()
-                .AddSameScoped<IRegistableContextHandle, ContextHandle>();
+                .AddSame<IContextHandle, ContextHandle>()
+                .AddSame<IRegistableContextHandle, ContextHandle>();
             return services;
         }
 
         // Same instance used among multiple interfaces
 
-        public static IServiceCollection AddSameScoped<IService, TService> (this IServiceCollection services) 
+        // static class ContextFactory<T> where T : class {
+        //     static T? Instance { get; set; }  = null;
+
+        //     public static T New(IServiceProvider provider) {
+        //         Instance = provider.GetService<T>();
+        //         return Instance;
+        //     }
+
+        //     public static T Get(IServiceProvider provider) {
+        //         if (Instance == null) Instance = provider.GetService<T>();
+        //         return Instance;
+        //     }
+        // }
+
+        // public static IServiceCollection AddNew<IService, TService> (this IServiceCollection services) 
+        //     where IService : class 
+        //     where TService : class, IService {
+                
+        //         return services.AddTransient<IService, TService>(
+        //             // x => x.GetRequiredService<TService>()
+        //             x => ContextFactory<TService>.New(x)
+        //         );
+        //     }
+
+        public static IServiceCollection AddSame<IService, TService> (this IServiceCollection services) 
             where IService : class 
-            where TService : class, IService => services.AddScoped<IService, TService>(x => x.GetRequiredService<TService>());
+            where TService : class, IService {
+                
+                return services.AddTransient<IService, TService>(
+                    x => x.GetRequiredService<TService>()
+                    // x => ContextFactory<TService>.Get(x)
+                );
+            }
 
 
         // Repo => Context builder
@@ -37,7 +67,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         public interface IServiceContextBuilder<TD> 
             where TD : class, new() {
 
-            IServiceCollection Service { get; }
+            IServiceCollection? Service { get; }
 
             IServiceContextBuilder<TD> WithContext<T, TMapper, TContext>()
                 where T : class
@@ -58,25 +88,25 @@ namespace Microsoft.Extensions.DependencyInjection {
         public class ServiceContextBuilder<TD> : IServiceContextBuilder<TD> 
             where TD : class, new() {
 
-            public IServiceCollection Service { get; set; } = new ServiceCollection();
+            public IServiceCollection? Service { get; set; } = null;
 
             public IServiceContextBuilder<TD> WithContext<T, TMapper, TContext>()
                 where T : class
                 where TContext : class, IContext<T>, IPersistContext<T>, IAggregationContext<T, TD>, IHookerContext<TD>
                 where TMapper : class, IMapper<T, TD> =>                 
-                new ServiceContextBuilder<TD>{ Service = Service.AddContext<T, TD, TContext, TMapper>() };
+                new ServiceContextBuilder<TD>{ Service = Service?.AddContext<T, TD, TContext, TMapper>() };
 
             public IServiceContextBuilder<TD> WithReadonlyContext<T, TMapper, TContext>()
                 where T : class
                 where TContext : class, IReadContext<T>, IPersistContext<T>, IAggregationContext<T, TD>
                 where TMapper : class, IReadonlyMapper<T, TD> =>                 
-                new ServiceContextBuilder<TD>{ Service = Service.AddReadonlyContext<T, TD, TContext, TMapper>() };
+                new ServiceContextBuilder<TD>{ Service = Service?.AddReadonlyContext<T, TD, TContext, TMapper>() };
 
             public IServiceContextBuilder<TD> WithView<T, TMapper, TContext>()
                 where T : class
                 where TContext : class, IReadContext<T>
                 where TMapper : class, IViewMapper<T, TD> =>                 
-                new ServiceContextBuilder<TD>{ Service = Service.AddView<T, TD, TContext, TMapper>() };
+                new ServiceContextBuilder<TD>{ Service = Service?.AddView<T, TD, TContext, TMapper>() };
         }
 
         #endregion
@@ -93,14 +123,23 @@ namespace Microsoft.Extensions.DependencyInjection {
             where TMapper : class, IMapper<T, TD> =>
                 services
                     .AddScoped<TContext>()
-                    .AddSameScoped<IContext<T>, TContext>()
-                    .AddSameScoped<IPersistContext<T>, TContext>()
-                    .AddSameScoped<IAggregationContext<T, TD>, TContext>()
-                    .AddSameScoped<IHookerContext<TD>, TContext>()
+                    .AddSame<IContext<T>, TContext>()
+                    .AddSame<IPersistContext<T>, TContext>()
+                    .AddSame<IAggregationContext<T, TD>, TContext>()
+                    .AddSame<IHookerContext<TD>, TContext>()
 
                     .AddScoped<IMapper<T, TD>, TMapper>()
 
-                    .AddSameScoped<IWriteRepository<TD>, Repository<TD>>();
+                    .AddSame<IWriteRepository<TD>, Repository<TD>>();
+                    // .AddTransient<TContext>()
+                    // .AddNew<IContext<T>, TContext>()
+                    // .AddSame<IPersistContext<T>, TContext>()
+                    // .AddSame<IAggregationContext<T, TD>, TContext>()
+                    // .AddSame<IHookerContext<TD>, TContext>()
+
+                    // .AddScoped<IMapper<T, TD>, TMapper>()
+
+                    // .AddSame<IWriteRepository<TD>, Repository<TD>>();
 
         public static IServiceCollection AddReadonlyContext<T, TD, TContext, TMapper>(
             this IServiceCollection services)
@@ -110,13 +149,13 @@ namespace Microsoft.Extensions.DependencyInjection {
             where TMapper : class, IReadonlyMapper<T, TD> =>
                 services
                     .AddScoped<TContext>()
-                    .AddSameScoped<IReadContext<T>, TContext>()
-                    .AddSameScoped<IPersistContext<T>, TContext>()
-                    .AddSameScoped<IAggregationContext<T, TD>, TContext>()
+                    .AddSame<IReadContext<T>, TContext>()
+                    .AddSame<IPersistContext<T>, TContext>()
+                    .AddSame<IAggregationContext<T, TD>, TContext>()
 
                     .AddScoped<IReadonlyMapper<T, TD>, TMapper>()
 
-                    .AddSameScoped<IBaseRepository<TD>, Repository<TD>>();
+                    .AddSame<IBaseRepository<TD>, Repository<TD>>();
 
         public static IServiceCollection AddView<T, TD, TContext, TMapper>(
             this IServiceCollection services)
@@ -126,11 +165,11 @@ namespace Microsoft.Extensions.DependencyInjection {
             where TMapper : class, IViewMapper<T, TD> =>
                 services
                     .AddScoped<TContext>()
-                    .AddSameScoped<IReadContext<T>, TContext>()
+                    .AddSame<IReadContext<T>, TContext>()
 
                     .AddScoped<IViewMapper<T, TD>, TMapper>()
 
-                    .AddSameScoped<IReadRepository<TD>, Repository<TD>>();
+                    .AddSame<IReadRepository<TD>, Repository<TD>>();
             
 
     }

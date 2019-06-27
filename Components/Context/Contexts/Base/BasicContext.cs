@@ -35,13 +35,27 @@ namespace MKLUODDD.Context
 
         public override IList<T> Query(
             Expression<Func<T, bool>> ? criteriaOnT = null, 
-            UpdLockType updLock = UpdLockType.None) {
+            UpdLockType updLock = UpdLockType.None, 
+            bool ignoreCollection = false) {
                 
             ClearPushedCache();
             Commit();
             ClearPushedCache();
 
-            return base.Query(criteriaOnT, updLock);
+            return base.Query(criteriaOnT, updLock, ignoreCollection);
+        }
+
+        public override IEnumerable<T> Enumerate(
+            Expression<Func<T, bool>> ? criteriaOnT = null,
+            UpdLockType updLock = UpdLockType.None, 
+            bool ignoreCollection = false,
+            int batchSize = 0) {
+                
+            ClearPushedCache();
+            Commit();
+            ClearPushedCache();
+
+            return base.Enumerate(criteriaOnT, updLock, ignoreCollection, batchSize);
         }
         
         #region IAggregationContext<T, TD>

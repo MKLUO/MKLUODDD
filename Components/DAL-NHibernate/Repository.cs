@@ -79,17 +79,17 @@ namespace MKLUODDD.DAL {
 
         public void Hook(in IHookerContext<TD> context) {
             if ((HookedContext != null) && (HookedContext != context))
-                throw new MultipleHookerException();
+                throw new MultipleHookerContextException();
             HookedContext = context;
             Handle.Register(this);
         }
 
         [System.Serializable]
-        public class MultipleHookerException : System.Exception {
-            public MultipleHookerException() : this("Only one Context can be hooked to a Repository!") { }
-            public MultipleHookerException(string message) : base(message) { }
-            public MultipleHookerException(string message, System.Exception inner) : base(message, inner) { }
-            protected MultipleHookerException(
+        public class MultipleHookerContextException : System.Exception {
+            public MultipleHookerContextException() : this("Only one Context can be hooked to a Repository!") { }
+            public MultipleHookerContextException(string message) : base(message) { }
+            public MultipleHookerContextException(string message, System.Exception inner) : base(message, inner) { }
+            protected MultipleHookerContextException(
                 System.Runtime.Serialization.SerializationInfo info,
                 System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }

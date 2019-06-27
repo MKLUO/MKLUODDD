@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using NHibernate;
 
@@ -126,8 +127,15 @@ namespace MKLUODDD.Context {
             foreach (var repo in Repositories)
                 repo.ClearPushedCache();
 
-            foreach (var repo in Repositories)
-                repo.Commit();
+            var repoList = Repositories.ToList();
+            var commitedRepos = new HashSet<IRepositoryHandle>{};
+            while (repoList.Any()) {
+                foreach (var repo in repoList) {
+                    repo.Commit();
+                    commitedRepos.Add(repo);
+                }
+                repoList = Repositories.Except(commitedRepos).ToList();
+            }
 
             if (OwnThisTransaction) {
                 foreach (var repo in Repositories)

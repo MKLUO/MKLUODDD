@@ -77,8 +77,9 @@ namespace MKLUODDD.Context
         }
 
         public virtual IList<T> Query(
-            Expression<Func<T, bool>> ? criteriaOnT = null, 
-            UpdLockType updLock = UpdLockType.None) {
+            Expression<Func<T, bool>> ? criteriaOnT = null,
+            UpdLockType updLock = UpdLockType.None, 
+            bool ignoreCollection = false) {
 
             if (Count(criteriaOnT) > 1000) {
                 // TODO: TooBigQueryException
@@ -90,14 +91,15 @@ namespace MKLUODDD.Context
             var query = GetQuery(criteriaOnT, updLock);
 
             foreach (var obj in query) {
-                entities.Add(Pull(obj));
+                entities.Add(Pull(obj, ignoreCollection));
             }
             return entities.ToList();
         }
 
-        public IEnumerable<T> Enumerate(
-            Expression<Func<T, bool>> ? criteriaOnT = null,
-            UpdLockType updLock = UpdLockType.None,
+        public virtual IEnumerable<T> Enumerate(
+            Expression<Func<T, bool>>? criteriaOnT = null,
+            UpdLockType updLock = UpdLockType.None, 
+            bool ignoreCollection = false,
             int batchSize = 0) {
 
             int amount = Count(criteriaOnT);
@@ -110,7 +112,7 @@ namespace MKLUODDD.Context
                 IQueryable<TD> batch = query.Skip(start).Take(size);
 
                 foreach (var obj in batch)
-                    yield return Pull(obj);
+                    yield return Pull(obj, ignoreCollection);
                 
                 start += size;
             }
@@ -122,9 +124,9 @@ namespace MKLUODDD.Context
 
         public virtual void Reset() => ClearStore();
         
-        public virtual void Draw(in T entity) {}
+        public virtual void DrawCollection(in T entity) {}
         
-        public virtual T Pull(in TD obj, bool halt = false) {
+        public virtual T Pull(in TD obj, bool ignoreCollection = false) {
             if (StoreLookUp.ContainsKey(obj))
                 return StoreLookUp[obj];
 

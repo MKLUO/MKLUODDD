@@ -33,19 +33,19 @@ namespace MKLUODDD.Context
 
         protected virtual void PullMidware(in T entity, in TD obj, bool ignoreCollection = false) { }
 
-        public override T Pull(in TD obj, bool halt = false) {
+        public override T Pull(in TD obj, bool ignoreCollection = false) {
             if (StoreLookUp.ContainsKey(obj))
                 return StoreLookUp[obj];
 
             var entity = Mapper.Compose(obj);
             Attach(entity, obj);
 
-            PullMidware(entity, obj, ignoreCollection: halt);
+            PullMidware(entity, obj, ignoreCollection: ignoreCollection);
 
             return entity;
         }
 
-        public override void Draw(in T entity) {
+        public override void DrawCollection(in T entity) {
             if (!Store.ContainsKey(entity))
                 return;
 
