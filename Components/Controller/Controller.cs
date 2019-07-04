@@ -21,8 +21,11 @@ namespace MKLUODDD.Controllers {
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] JObject userData) {
+
             var loginResult = App.Authenticate(userData).ToJson();
-            if (!App.IsLoggedIn()) return Unauthorized(loginResult);
+
+            // if (!App.IsLoggedIn()) 
+            //     return Unauthorized(loginResult);
 
             return Ok(loginResult);
         }

@@ -39,7 +39,7 @@ namespace MKLUODDD.Apps {
                     Session.Clear();
                     break;
             }
-            return new LoginResult(authResult.Messege);
+            return new LoginResult(authResult);
         }
 
         public bool IsLoggedIn() => Session.User != null;

@@ -11,5 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Models\Domain\Domain.csproj" />
     <ProjectReference Include="..\..\Models\PersistInfo\PersistInfo.csproj" />
+    <ProjectReference Include="..\..\Models\ServiceData\ServiceData.csproj" />
   </ItemGroup>
 </Project>

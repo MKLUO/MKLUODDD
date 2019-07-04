@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace MKLUODDD.Apps {
 
+    using Core;
     using Model.Domain;
     using Model.Persist;
 
@@ -32,7 +33,7 @@ namespace MKLUODDD.Apps {
             set => Session.SetString(timeKey, value);
         }
 
-        public PersistInfo<User>? User {
+        public UserPersistInfo? User {
             get {
                 var id = Session.GetInt32(userKey) ;
                 var version = (Session.GetInt32(userVersionKey) is int ver) ? BitConverter.GetBytes(ver) : null;
@@ -40,7 +41,7 @@ namespace MKLUODDD.Apps {
                 if ((id == null) || (version == null)) 
                     return null;
 
-                return new PersistInfo<User>(id.Value, new ByteArray(version));
+                return new UserPersistInfo(id.Value, new ByteArray(version));
             }
             set {
                 if (value?.Id is int id)

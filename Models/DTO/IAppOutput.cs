@@ -14,8 +14,8 @@ namespace MKLUODDD.Model.DTO.Views {
         public abstract OutputType Type { get; }
         public abstract object Payload { get; }
         public JObject ToJson() => JObject.FromObject(new {
-            Type = Type.ToString(),
-            Payload
+            type = Type.ToString(),
+            payload = Payload
         });
     }
 }

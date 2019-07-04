@@ -24,17 +24,17 @@ namespace MKLUODDD.Core {
         public AuthenticationResult Authenticate(
             Username username, Password password) {
 
-            return ServiceProvider.GetRequiredService<AuthenticationService>()
+            return ServiceProvider.GetRequiredService<IAuthenticationService>()
                 .Authenticate(username, password);
         }
 
-        public AuthorizationResult Authorize(
-            PersistInfo<User> userInfo,
-            ServiceAction action) { 
+        // public AuthorizationResult Authorize(
+        //     PersistInfo<User> userInfo,
+        //     ServiceAction action) { 
 
-            return ServiceProvider.GetRequiredService<AuthorizationService>()
-                .Authorize(userInfo, action);
-        }
+        //     return ServiceProvider.GetRequiredService<IAuthorizationService>()
+        //         .Authorize(userInfo, action);
+        // }
 
         // public List<ServiceKey> GetAvailableServices(int userId) {
         //     return ServiceProvider.GetRequiredService<AuthorizationService>()
